@@ -211,12 +211,10 @@ if st.session_state.logged_in:
     input_df = pd.get_dummies(input_df)
 
     # MATCH TRAINING COLUMNS
-    for col in columns:
-
-        if col not in input_df.columns:
-            input_df[col] = 0
-
-    input_df = input_df[columns]
+input_df = input_df.reindex(
+    columns=columns,
+    fill_value=0
+)
 
     # SCALE DATA
     input_scaled = scaler.transform(input_df)
