@@ -53,7 +53,6 @@ def login_user(username, password):
 # LOAD MODEL FILES
 # =========================
 model = joblib.load('knn_model.pkl')
-scaler = joblib.load('scaler.pkl')
 columns = joblib.load('columns.pkl')
 
 # =========================
@@ -126,106 +125,132 @@ elif choice == "Login":
             st.error("Invalid username or password")
 
 # =========================
+# =========================
 # MAIN APP
 # =========================
 if st.session_state.logged_in:
 
-    st.title("💼 Salary Prediction App (KNN Improved)")
+    st.title("💼 Salary Prediction App")
 
     # INPUTS
-    experience = st.number_input(
-        "Experience (years)",
-        0,
-        50,
-        0
-    )
+    experience = st.number_input("Experience Years", 0, 50, 1)
 
-    skills = st.number_input(
-        "Skills Count",
-        0,
-        50,
-        0
-    )
+    skills = st.number_input("Skills Count", 0, 50, 1)
 
-    certifications = st.number_input(
-        "Certifications",
-        0,
-        20,
-        0
-    )
+    certifications = st.number_input("Certifications", 0, 20, 0)
 
-    job_role = st.selectbox(
-        "Job Role",
+    job_title = st.selectbox(
+        "Job Title",
         [
-            'Data Scientist',
-            'Software Engineer',
-            'Web Developer',
-            'Other'
+            "Backend Developer",
+            "Business Analyst",
+            "Cloud Engineer",
+            "Cybersecurity Analyst",
+            "Data Analyst",
+            "Data Scientist",
+            "DevOps Engineer",
+            "Frontend Developer",
+            "Machine Learning Engineer",
+            "Product Manager",
+            "Software Engineer"
         ]
     )
 
     education = st.selectbox(
-        "Education",
+        "Education Level",
         [
-            'B.Tech',
-            'Diploma',
-            'M.Tech',
-            'Other'
+            "Diploma",
+            "High School",
+            "Master",
+            "PhD"
         ]
     )
 
     location = st.selectbox(
         "Location",
         [
-            'Bangalore',
-            'Hyderabad',
-            'Pune',
-            'Other'
+            "Canada",
+            "Germany",
+            "India",
+            "Netherlands",
+            "Remote",
+            "Singapore",
+            "Sweden",
+            "UK",
+            "USA"
         ]
     )
 
     industry = st.selectbox(
         "Industry",
         [
-            'IT',
-            'Finance',
-            'Healthcare',
-            'Other'
+            "Education",
+            "Finance",
+            "Government",
+            "Healthcare",
+            "Manufacturing",
+            "Media",
+            "Retail",
+            "Technology",
+            "Telecom"
         ]
     )
 
-    # CREATE INPUT DATA
-    input_dict = {
-        'Experience': [experience],
-        'Skills': [skills],
-        'Certifications': [certifications],
-        'Job_Role': [job_role],
-        'Education': [education],
-        'Location': [location],
-        'Industry': [industry]
-    }
-
-    input_df = pd.DataFrame(input_dict)
-
-    # ONE HOT ENCODING
-    input_df = pd.get_dummies(input_df)
-
-    # MATCH TRAINING COLUMNS
-    input_df = input_df.reindex(
-        columns=columns,
-        fill_value=0
+    company_size = st.selectbox(
+        "Company Size",
+        [
+            "Large",
+            "Medium",
+            "Small",
+            "Startup"
+        ]
     )
 
-    # SCALE DATA
-    input_scaled = scaler.transform(input_df)
+    remote_work = st.selectbox(
+        "Remote Work",
+        [
+            "Yes",
+            "No"
+        ]
+    )
 
-    # PREDICT
+    seniority = st.selectbox(
+        "Seniority",
+        [
+            "Junior",
+            "Mid",
+            "Senior"
+        ]
+    )
+
     if st.button("Predict Salary"):
 
-        prediction = model.predict(input_scaled)
+        input_data = dict.fromkeys(columns, 0)
+
+        # NUMERIC FEATURES
+        input_data['experience_years'] = experience
+        input_data['skills_count'] = skills
+        input_data['certifications'] = certifications
+
+        input_data['exp_squared'] = experience ** 2
+        input_data['skill_per_exp'] = skills / (experience + 1)
+        input_data['cert_per_skill'] = certifications / (skills + 1)
+
+        # ONE HOT ENCODED FEATURES
+        input_data[f'job_title_{job_title}'] = 1
+        input_data[f'education_level_{education}'] = 1
+        input_data[f'location_{location}'] = 1
+        input_data[f'industry_{industry}'] = 1
+        input_data[f'company_size_{company_size}'] = 1
+        input_data[f'remote_work_{remote_work}'] = 1
+        input_data[f'seniority_{seniority}'] = 1
+
+        input_df = pd.DataFrame([input_data])
+
+        prediction = model.predict(input_df)
 
         st.success(
-            f"Predicted Salary: ₹ {prediction[0]:,.2f}"
+            f"💰 Predicted Salary: ₹ {prediction[0]:,.2f}"
         )
 
     # LOGOUT
